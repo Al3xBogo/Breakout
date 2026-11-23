@@ -48,6 +48,14 @@ public class Paddle {
      */
     public void moveLeft() {
         // TODO: implement left movement with a left-edge boundary check
+        if (x >= 0) {
+            if (x <= 7) {
+                x = 0;
+                return;
+            }
+            x -= SPEED;
+
+        }
     }
 
     /**
@@ -60,6 +68,14 @@ public class Paddle {
      */
     public void moveRight() {
         // TODO: implement right movement with a right-edge boundary check
+        if (x <= screenWidth) {
+            if (x >= screenWidth - WIDTH - 7) {
+                x = screenWidth - WIDTH; // WIDTH is paddlewidth. It Seems like the 'x' is actually where the leftmost part of the paddle is.
+                return;
+            }
+            x += SPEED;
+
+        }
     }
 
     /**
