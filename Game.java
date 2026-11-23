@@ -111,7 +111,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
     private void createBricks() {
         bricks = new Brick[ROWS][COLS];
         Color[] rowColors = { Color.RED, Color.ORANGE, Color.YELLOW,
-                              Color.GREEN, Color.CYAN };
+                Color.GREEN, Color.CYAN };
         int[] rowPoints = { 50, 40, 30, 20, 10 };
 
         int cellWidth = Brick.WIDTH + GAP;
@@ -181,6 +181,12 @@ public class Game extends JPanel implements ActionListener, KeyListener {
      */
     private void checkWallCollisions() {
         // TODO: reverse ball direction when it hits a side or the top wall
+        if (ball.getX()<=0 || ball.getX()+ball.SIZE>=WIDTH) {
+            ball.bounceX();
+        }
+        if (ball.getY()<=0) {
+            ball.bounceY();
+        }
     }
 
     /**
@@ -196,6 +202,9 @@ public class Game extends JPanel implements ActionListener, KeyListener {
      */
     private void checkPaddleCollision() {
         // TODO: bounce the ball off the paddle
+        if (ball.getY()+ball.SIZE>=paddle.getY()) {
+            ball.bounceY();
+        }
     }
 
     /**
@@ -214,6 +223,18 @@ public class Game extends JPanel implements ActionListener, KeyListener {
      */
     private void checkBrickCollisions() {
         // TODO: destroy the first brick the ball hits, score it, and bounce
+        for (int i=0; i<bricks.length;i++) {
+            for (int j = 0; j < bricks[i].length; j++) {
+                if (bricks[i][j]!=null&&bricks[i][j].isDestroyed()==true) {
+                    if (ball.getBounds().intersects(bricks[i][j].getBounds())) {
+                        score++;
+                        ball.bounceY();
+                        bricks[i][j].setDestroyed(true);
+                    }
+
+                }
+            }
+        }
     }
 
     // ================================================================
@@ -233,6 +254,19 @@ public class Game extends JPanel implements ActionListener, KeyListener {
      */
     private void checkWinCondition() {
         // TODO: if no live bricks remain, win the game
+        boolean win=true;
+        for (int i =0;i<bricks.length;i++) {
+            for (int j=0;j<bricks[i].length;j++) {
+                if (bricks[i][j]!=null ) {
+                    if (bricks[i][j].isDestroyed() == false) {
+                        win = false;
+                    }
+                }
+            }
+        }
+        if (win) {
+            endGame();
+        }
     }
 
     /**
@@ -248,6 +282,16 @@ public class Game extends JPanel implements ActionListener, KeyListener {
      */
     private void checkLoseCondition() {
         // TODO: lose a life when the ball falls off the bottom; end at 0 lives
+        if (ball.getY()+ball.SIZE>=HEIGHT) {
+            if (lives>0) {
+                resetBall();
+                lives-=1;
+            }
+            else {
+                won=false;
+                endGame();
+            }
+        }
     }
 
     /** Stops the game loop and flags the game as over. */

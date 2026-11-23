@@ -46,6 +46,8 @@ public class Ball {
      */
     public void update() {
         // TODO: move the ball by its velocity
+        x+=dx;
+        y+=dy;
     }
 
     /**
