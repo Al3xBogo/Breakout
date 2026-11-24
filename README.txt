@@ -4,9 +4,9 @@ CPS 150 - Introduction to Programming
 ============================================
 
 TEAM MEMBERS:
-  1. [Name] - [email]
-  2. [Name] - [email]
-  3. [Name] - [email]
+  1. Alexander Bogomolov - bogomolova1@udayton.edu
+  2. Fernando Montoya - montoyaf1@udayton.edu
+  3. John Turri - turrij1@udayton.edu
 
 --------------------------------------------
 ENHANCED FEATURES IMPLEMENTED:
