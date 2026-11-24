@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.Rectangle;
+import java.util.ArrayList;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -181,12 +182,22 @@ public class Game extends JPanel implements ActionListener, KeyListener {
      */
     private void checkWallCollisions() {
         // TODO: reverse ball direction when it hits a side or the top wall
+        if (ball.getX() <= 0 || ball.getX() >= WIDTH - ball.SIZE) { // Bounces from left and right edges of screen
+            ball.bounceX();
+        }
+
+        if (ball.getY() <= 0) { // Bounces from top edge of screen
+            ball.bounceY();
+        }
+
+        /*
         if (ball.getX()<=0 || ball.getX()+ball.SIZE>=WIDTH) {
             ball.bounceX();
         }
         if (ball.getY()<=0) {
             ball.bounceY();
         }
+        */
     }
 
     /**
@@ -201,10 +212,24 @@ public class Game extends JPanel implements ActionListener, KeyListener {
      * Difficulty: Medium
      */
     private void checkPaddleCollision() {
-        // TODO: bounce the ball off the paddle
-        if (ball.getY()+ball.SIZE>=paddle.getY()) {
-            ball.bounceY();
+        Rectangle ballBounds = ball.getBounds();
+        Rectangle paddleBounds = paddle.getBounds();
+        if (paddleBounds.intersects(ballBounds)) { // If hit from the side, reverse x velocity.
+            if (ballBounds.getMaxY() > paddleBounds.getMinY() + ball.getDy()) {
+                if (ballBounds.getCenterX() > paddleBounds.getMinX() && ballBounds.getCenterX() <= paddleBounds.getCenterX()) { // Checks if ball is inside left side of paddle
+                    ball.setX(paddle.getX()); // Teleports to nearest edge (left)
+                    ball.setDx(-Math.abs(ball.getDx())); // Sets velocity leftward
+                } else if (ballBounds.getCenterX() > paddleBounds.getCenterX() && ballBounds.getCenterX() < paddleBounds.getMaxX()) { // Checks if ball is inside right side of paddle
+                    ball.setX(paddle.getX() + paddleBounds.width); // Teleports to nearest edge (right)
+                    ball.setDx(Math.abs(ball.getDx())); // Sets velocity rightward
+                }
+            } else { // Bounces normally if paddle is hit from atop
+                ball.setY(paddleBounds.y - ballBounds.height); // Allows collisions from the side of the paddle without the risk of the ball bouncing downward immediately.
+            }
+            ball.setDy(-Math.abs(ball.getDy()));
         }
+
+
     }
 
     /**
@@ -222,8 +247,27 @@ public class Game extends JPanel implements ActionListener, KeyListener {
      * Difficulty: Hard
      */
     private void checkBrickCollisions() {
+        for (Brick[] bricks1 : bricks) {
+            for (Brick brick : bricks1) {
+                Rectangle ballBounds = ball.getBounds();
+                Rectangle brickBounds = brick.getBounds();
+
+                if (!brick.isDestroyed() && brickBounds.intersects(ballBounds)) {
+                    brick.setDestroyed(true);
+
+                    if(ball.getBounds().getCenterX() > brickBounds.getMinX() && ball.getBounds().getCenterX() > brickBounds.getMaxX()) {
+                        ball.bounceY();
+                    } else {
+                        ball.bounceX();
+                    }
+                    score++;
+                    return;
+                }
+            }
+
+        }
         // TODO: destroy the first brick the ball hits, score it, and bounce
-        for (int i=0; i<bricks.length;i++) {
+        /*for (int i=0; i<bricks.length;i++) {
             for (int j = 0; j < bricks[i].length; j++) {
                 if (bricks[i][j]!=null&&bricks[i][j].isDestroyed()==true) {
                     if (ball.getBounds().intersects(bricks[i][j].getBounds())) {
@@ -234,7 +278,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
                 }
             }
-        }
+        }*/
     }
 
     // ================================================================
@@ -290,6 +334,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
             else {
                 won=false;
                 endGame();
+                ball.setX(-999); // hides ball
             }
         }
     }
