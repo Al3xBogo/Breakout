@@ -70,6 +70,8 @@ public class Game extends JPanel implements ActionListener, KeyListener {
     /** True if the player won (all bricks cleared). */
     private boolean won;
 
+    private boolean paused; // True if the game is paused (escape pressed)
+
     /**
      * Builds the game panel, sets its size, registers keyboard input, and
      * initializes all game objects.
@@ -94,6 +96,20 @@ public class Game extends JPanel implements ActionListener, KeyListener {
     public void start() {
         timer = new Timer(TICK_MS, this);
         timer.start();
+    }
+
+    private void pauseToggle() {
+        if (paused) {
+            timer.restart();
+        } else {
+            timer.stop();
+            repaint();
+        }
+        paused = !paused;
+    }
+
+    public boolean isPaused() {
+        return paused;
     }
 
     /**
@@ -215,12 +231,12 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         Rectangle ballBounds = ball.getBounds();
         Rectangle paddleBounds = paddle.getBounds();
         if (paddleBounds.intersects(ballBounds)) { // If hit from the side, reverse x velocity.
-            if (ballBounds.getMaxY() > paddleBounds.getMinY() + ball.getDy()) {
+            if (ballBounds.getMaxY() > paddleBounds.getMinY() + ball.getDy()) { // Special logic for bouncing the ball from the edges of the paddle.
                 if (ballBounds.getCenterX() > paddleBounds.getMinX() && ballBounds.getCenterX() <= paddleBounds.getCenterX()) { // Checks if ball is inside left side of paddle
-                    ball.setX(paddle.getX()); // Teleports to nearest edge (left)
+                    ball.setX(paddleBounds.x - ballBounds.width); // Teleports to nearest edge (left)
                     ball.setDx(-Math.abs(ball.getDx())); // Sets velocity leftward
                 } else if (ballBounds.getCenterX() > paddleBounds.getCenterX() && ballBounds.getCenterX() < paddleBounds.getMaxX()) { // Checks if ball is inside right side of paddle
-                    ball.setX(paddle.getX() + paddleBounds.width); // Teleports to nearest edge (right)
+                    ball.setX(paddleBounds.x + paddleBounds.width); // Teleports to nearest edge (right)
                     ball.setDx(Math.abs(ball.getDx())); // Sets velocity rightward
                 }
             } else { // Bounces normally if paddle is hit from atop
@@ -255,7 +271,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
                 if (!brick.isDestroyed() && brickBounds.intersects(ballBounds)) {
                     brick.setDestroyed(true);
 
-                    if(ball.getBounds().getCenterX() > brickBounds.getMinX() && ball.getBounds().getCenterX() > brickBounds.getMaxX()) {
+                    if(ball.getX() + ball.getBounds().width > brickBounds.x && ball.getX() < brickBounds.getMaxX()) {
                         ball.bounceY();
                     } else {
                         ball.bounceX();
@@ -376,6 +392,10 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         if (gameOver) {
             drawGameOver(g);
         }
+
+        if (paused) {
+            drawPaused(g);
+        }
     }
 
     /**
@@ -403,6 +423,14 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
         g.setFont(new Font("SansSerif", Font.PLAIN, 22));
         g.drawString("Final Score: " + score, WIDTH / 2 - 90, HEIGHT / 2 + 20);
+    }
+
+    private void drawPaused(Graphics g) {
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect((int)((1/12.0)*WIDTH), (int)((4/18.0)*HEIGHT), (int)((4/12.0)*WIDTH), (int)((10/18.0)*HEIGHT));
+        g.fillRect((int)((7/12.0)*WIDTH), (int)((4/18.0)*HEIGHT), (int)((4/12.0)*WIDTH), (int)((10/18.0)*HEIGHT));
+        g.setColor(Color.RED);
+        g.drawString("Game Paused (ESC)", 10, 50);
     }
 
     // ================================================================
@@ -448,6 +476,8 @@ public class Game extends JPanel implements ActionListener, KeyListener {
      */
     @Override
     public void keyTyped(KeyEvent e) {
-        // Not used.
+        if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
+            pauseToggle();
+        }
     }
 }
