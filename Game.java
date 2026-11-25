@@ -7,7 +7,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.Rectangle;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
@@ -59,6 +64,10 @@ public class Game extends JPanel implements ActionListener, KeyListener {
     private Timer timer;
     /** Current score. */
     private int score;
+
+
+    private int highScore = 0; // High score
+
     /** Remaining lives. */
     private int lives;
     /** True while the left arrow / A key is held. */
@@ -84,6 +93,30 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
         score = 0;
         lives = 3;
+
+        File file = new File("highScore.txt");
+
+        /** Reads high score from file highScore.txt and creates the file if it does not exist. */
+        try (Scanner myReader = new Scanner(file)) {
+            if (myReader.hasNextInt()) {
+                int highScoreFromFile = myReader.nextInt();
+                highScore = Math.max(highScoreFromFile, 0);
+            } else {
+                highScore = 0;
+            }
+        } catch (FileNotFoundException e1) {
+            try {
+                FileWriter myWriter = new FileWriter("highScore.txt");
+                myWriter.write("");
+                myWriter.close();
+            } catch (IOException e) {
+                IO.println("ERROR! File did not exist, and some error occured whilst trying to create highScore.txt!");
+                e1.printStackTrace();
+                e.printStackTrace();
+            }
+        }
+
+
         gameOver = false;
         won = false;
 
@@ -112,6 +145,18 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         return paused;
     }
 
+    public int getHighScore() {
+        return highScore;
+    }
+
+    public boolean setHighScore(int highScore) {
+        if (highScore < 0) {
+            return false;
+        }
+        this.highScore = highScore;
+        return true;
+    }
+
     /**
      * Places the ball just above the paddle with an initial upward velocity.
      * Called at the start and after a life is lost.
@@ -129,7 +174,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         bricks = new Brick[ROWS][COLS];
         Color[] rowColors = { Color.RED, Color.ORANGE, Color.YELLOW,
                 Color.GREEN, Color.CYAN };
-        int[] rowPoints = { 50, 40, 30, 20, 10 };
+        int[] rowPoints = {50, 40, 30, 20, 10 };
 
         int cellWidth = Brick.WIDTH + GAP;
         for (int r = 0; r < ROWS; r++) {
@@ -271,12 +316,16 @@ public class Game extends JPanel implements ActionListener, KeyListener {
                 if (!brick.isDestroyed() && brickBounds.intersects(ballBounds)) {
                     brick.setDestroyed(true);
 
-                    if(ball.getX() + ball.getBounds().width > brickBounds.x && ball.getX() < brickBounds.getMaxX()) {
+                    if(ball.getX() + ball.getBounds().width - ball.getDx() > brickBounds.x && ball.getX() + ball.getDx() < brickBounds.getMaxX()) {
                         ball.bounceY();
-                    } else {
+                    } else /*if (ball.getY() + ball.getBounds().width > brickBounds.x + ball.getDy())*/ {
                         ball.bounceX();
                     }
                     score++;
+                    if (highScore < score) {
+                        highScore = score;
+                        // TODO: Display this ^ on the screen
+                    }
                     return;
                 }
             }
@@ -355,11 +404,19 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         }
     }
 
-    /** Stops the game loop and flags the game as over. */
+    /** Stops the game loop and flags the game as over. Also saves high score to highScore.txt in plain text. */
     private void endGame() {
         gameOver = true;
         if (timer != null) {
             timer.stop();
+        }
+        try {
+            FileWriter myWriter = new FileWriter("highScore.txt");
+            myWriter.write(Integer.toString(highScore));
+            myWriter.close();
+        } catch (IOException e) {
+            IO.println("An error occurred.");
+            e.printStackTrace();
         }
     }
 
@@ -407,6 +464,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Monospaced", Font.BOLD, 18));
         g.drawString("Score: " + score, 12, 25);
+        g.drawString("High Score: " + highScore, WIDTH / 2 - 50, 25);
         g.drawString("Lives: " + lives, WIDTH - 110, 25);
     }
 
