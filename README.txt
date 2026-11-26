@@ -19,8 +19,11 @@ ENHANCED FEATURES IMPLEMENTED:
      Pauses timer and draws "pause" symbol overlay while paused.
      Resumes timer while un-paused.
 
-  3. [Feature ID & Name, e.g., E5 - Start Screen]
-     Brief description of how it works.
+  3. E4 - Sound Effects
+     Different sounds for ball hitting paddle, walls, and bricks,
+     lost lives, game lost, and game won.
+     .WAV audio files stored in ./Resources/ and if files aren't
+     found, the game will still function
 
 --------------------------------------------
 CONTRIBUTIONS:
