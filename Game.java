@@ -1,19 +1,14 @@
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.Rectangle;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
-import javax.swing.JPanel;
-import javax.swing.Timer;
+import javax.swing.*;
 
 /**
  * The core of the Breakout game: the game loop, rendering, keyboard input, and
@@ -66,6 +61,13 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
 
     private int highScore = 0; // High score
+    private int resetTicks = 0; // Number of ticks since last 'r' keystroke
+    private boolean rPressed = false;
+    private boolean recentReset = false;
+    private int rSequence = 0;
+
+    private boolean newBallCounter = false;
+    private int newBallTicks = 0;
 
     /** Remaining lives. */
     private int lives;
@@ -80,6 +82,15 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
     private boolean paused; // True if the game is paused (escape pressed)
 
+    private final Sound popSound;
+    private final Sound paddleSound;
+    private final Sound breakSound;
+    private final Sound lifeLostSound;
+    private final Sound winSound;
+    private final Sound loseSound;
+
+
+
     /**
      * Builds the game panel, sets its size, registers keyboard input, and
      * initializes all game objects.
@@ -92,6 +103,15 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
         score = 0;
         lives = 3;
+
+        popSound = new Sound("./resources/pop_1.wav");
+        paddleSound = new Sound("./resources/wood_small_hollow.wav");
+        breakSound = new Sound("./resources/water_drop_synthetic.wav");
+        lifeLostSound = new Sound("./resources/8_bit_negative.wav");
+        loseSound = new Sound("./resources/8_bit_defeated.wav");
+        winSound = new Sound("./resources/xylophone_level_complete.wav");
+
+
 
         File file = new File("highScore.txt");
 
@@ -109,7 +129,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
                 myWriter.write("");
                 myWriter.close();
             } catch (IOException e) {
-                IO.println("ERROR! File did not exist, and some error occured whilst trying to create highScore.txt!");
+                IO.println("ERROR! File did not exist, and some error occurred whilst trying to create highScore.txt!");
                 e1.printStackTrace();
                 e.printStackTrace();
             }
@@ -139,6 +159,8 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         }
         paused = !paused;
     }
+
+
 
     public boolean isPaused() {
         return paused;
@@ -221,6 +243,16 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         checkPaddleCollision();
         checkBrickCollisions();
         checkLoseCondition();
+
+        if (newBallTicks > 120) {
+            newBallCounter = false;
+            newBallTicks = 0;
+            ball.setDx(3);
+            ball.setDy(-3);
+        }
+
+
+
         checkWinCondition();
     }
 
@@ -234,10 +266,12 @@ public class Game extends JPanel implements ActionListener, KeyListener {
     private void checkWallCollisions() {
         if (ball.getX() <= 0 || ball.getX() >= WIDTH - ball.SIZE) { // Bounces from left and right edges of screen
             ball.bounceX();
+            popSound.play();
         }
 
         if (ball.getY() <= 0) { // Bounces from top edge of screen
             ball.bounceY();
+            popSound.play();
         }
 
     }
@@ -253,20 +287,27 @@ public class Game extends JPanel implements ActionListener, KeyListener {
     private void checkPaddleCollision() {
         Rectangle ballBounds = ball.getBounds();
         Rectangle paddleBounds = paddle.getBounds();
-        if (paddleBounds.intersects(ballBounds)) { // If hit from the side, reverse x velocity.
+        if (paddleBounds.intersects(ballBounds)) {
             if (ballBounds.getMaxY() > paddleBounds.getMinY() + ball.getDy()) { // Special logic for bouncing the ball from the edges of the paddle.
-                if (ballBounds.getCenterX() > paddleBounds.getMinX() && ballBounds.getCenterX() <= paddleBounds.getCenterX()) { // Checks if ball is inside left side of paddle
-                    ball.setX(paddleBounds.x - ballBounds.width); // Teleports to nearest edge (left)
+                if (ballBounds.x + ballBounds.width + ball.getDx() > paddleBounds.x && ballBounds.x + ball.getDx() + ballBounds.width <= paddleBounds.x + paddleBounds.width / 2) { // Checks if ball is inside left side of paddle
+
+                    // Minus Dx since ball is moving rightward and hitting left side...
+                    ball.setX(paddleBounds.x - ballBounds.width - ball.getDx()); // Teleports to nearest edge (left)
+
                     ball.setDx(-Math.abs(ball.getDx())); // Sets velocity leftward
-                } else if (ballBounds.getCenterX() > paddleBounds.getCenterX() && ballBounds.getCenterX() < paddleBounds.getMaxX()) { // Checks if ball is inside right side of paddle
-                    ball.setX(paddleBounds.x + paddleBounds.width); // Teleports to nearest edge (right)
+                } else if (ballBounds.x + ball.getDx() > paddleBounds.width / 2 && ballBounds.x + ball.getDx() < paddleBounds.x + paddleBounds.width) { // Checks if ball is inside right side of paddle
+
+                    // Minus Dx since ball is moving leftward and hitting right side...
+                    ball.setX(paddleBounds.x + paddleBounds.width + Math.abs(ball.getDx())); // Teleports to nearest edge (right)
+
                     ball.setDx(Math.abs(ball.getDx())); // Sets velocity rightward
                 }
-            } else { // Bounces normally if paddle is hit from atop
-                ball.setY(paddleBounds.y - ballBounds.height); // Allows collisions from the side of the paddle without the risk of the ball bouncing downward immediately.
             }
-            ball.setDy(-Math.abs(ball.getDy()));
+            ball.setY(paddleBounds.y - ballBounds.height); // Prevents ball getting stuck in the paddle
+            ball.setDy(-Math.abs(ball.getDy())); // Bounces ball upward
+            paddleSound.play();
         }
+
 
 
     }
@@ -300,6 +341,8 @@ public class Game extends JPanel implements ActionListener, KeyListener {
                     if (highScore < score) {
                         highScore = score;
                     }
+
+                    breakSound.play();
                     return;
                 }
             }
@@ -335,8 +378,12 @@ public class Game extends JPanel implements ActionListener, KeyListener {
     private void checkLoseCondition() {
         if (ball.getY()+ball.SIZE>=HEIGHT) {
             if (lives>0) {
+                newBallCounter = true;
                 lives--;
+                lifeLostSound.play();
                 resetBall();
+                ball.setDx(0);
+                ball.setDy(0);
             }
             else {
                 won=false;
@@ -349,6 +396,11 @@ public class Game extends JPanel implements ActionListener, KeyListener {
     /** Stops the game loop and flags the game as over. Also saves high score to highScore.txt in plain text. */
     private void endGame() {
         gameOver = true;
+        if (won) {
+            winSound.play();
+        } else {
+            loseSound.play();
+        }
         if (timer != null) {
             timer.stop();
         }
@@ -388,6 +440,9 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         ball.draw(g);
         drawHud(g);
 
+
+
+
         if (gameOver) {
             drawGameOver(g);
         }
@@ -406,8 +461,56 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         g.setColor(Color.WHITE);
         g.setFont(new Font("Monospaced", Font.BOLD, 18));
         g.drawString("Score: " + score, 12, 25);
-        g.drawString("High Score: " + highScore, WIDTH / 2 - 50, 25);
+        g.drawString("High Score: " + highScore, WIDTH / 2 - 75, 25);
         g.drawString("Lives: " + lives, WIDTH - 110, 25);
+
+        g.setColor(Color.RED);
+        if (!isPaused()) {
+            g.drawString("ESC to pause", 10, 50);
+        }
+
+        g.setFont(new Font(Font.SERIF, Font.PLAIN, 14));
+        if (rPressed && !recentReset) {
+            resetTicks++;
+            if (resetTicks > 120) {
+
+                rPressed = false;
+                rSequence = 0;
+                resetTicks = 0;
+
+            }
+
+            if (rSequence >= 5) {
+
+                highScore = score; // reset high score
+
+
+                recentReset = true;
+                rPressed = false;
+                rSequence = 0;
+                resetTicks = 0;
+            }
+            g.setColor(Color.RED);
+            g.drawString("Are you sure? Press Shift + R " + (5 - rSequence) + " more time" + ((5-rSequence != 1) ? "s" : "") + " to reset high score!", WIDTH / 2 - 175, 45);
+        } else if (recentReset) {
+            resetTicks++;
+            if (resetTicks > 120) {
+
+                recentReset = false;
+                resetTicks = 0;
+
+            }
+
+            g.setColor(Color.GREEN);
+            g.drawString("High score reset!", WIDTH / 2 - 60, 45);
+        } else {
+            g.setColor(Color.LIGHT_GRAY);
+            g.drawString("Press Shift + R to reset high score.", WIDTH / 2 - 85, 45);
+        }
+
+        if (newBallCounter) {
+            newBallTicks++;
+        }
     }
 
     /**
@@ -429,6 +532,7 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         g.setColor(Color.DARK_GRAY);
         g.fillRect((int)((1/12.0)*WIDTH), (int)((4/18.0)*HEIGHT), (int)((4/12.0)*WIDTH), (int)((10/18.0)*HEIGHT));
         g.fillRect((int)((7/12.0)*WIDTH), (int)((4/18.0)*HEIGHT), (int)((4/12.0)*WIDTH), (int)((10/18.0)*HEIGHT));
+        g.setFont(new Font("Monospaced", Font.BOLD, 18));
         g.setColor(Color.RED);
         g.drawString("Game Paused (ESC)", 10, 50);
     }
@@ -479,6 +583,17 @@ public class Game extends JPanel implements ActionListener, KeyListener {
         if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
             if (!gameOver) {
                 pauseToggle();
+            }
+        }
+        if (e.getKeyChar() == KeyEvent.VK_R) {
+            if (!gameOver) {
+                if (!rPressed) {
+                    rPressed = true;
+                }
+
+                resetTicks = 0;
+                rSequence++;
+
             }
         }
     }

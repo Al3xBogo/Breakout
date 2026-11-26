@@ -28,7 +28,10 @@ CONTRIBUTIONS:
             Implemented Paddle motion and collisions
             Fixed ball interactions with bricks
             Added play/pause interactions
-            Added persistent high score functionality
+            Implemented persistent high score functionality
+            Implemented game sounds
+            Implemented score reset functionality
+            Added pause before new ball
 
   [Name 2]: Implemented Ball class, wall and paddle
             collisions, and increasing difficulty.
@@ -53,5 +56,9 @@ REFERENCES:
   - [e.g., "Java Swing documentation: docs.oracle.com/..."]
   - Java Read Files Tutorial: https://www.w3schools.com/java/java_files_read.asp
   - Java Write Files Tutorial: https://www.w3schools.com/java/java_files_write.asp
+  - Playing Sound in Java: https://www3.ntu.edu.sg/home/ehchua/programming/java/J8c_PlayingSound.html
+  - 400+ Sounds Pack: https://ci.itch.io/400-sounds-pack
+  - Stackoverflow - Java unreported exception: https://stackoverflow.com/questions/2091589/java-unreported-exception
+  - Stackoverflow - AudioSystem successfully plays Clip, but only once - LineUnavailableException: https://stackoverflow.com/questions/66443421/audiosystem-successfully-plays-clip-but-only-once-lineunavailableexception
 
 ============================================
