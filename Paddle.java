@@ -42,14 +42,10 @@ public class Paddle {
     /**
      * Moves the paddle left by {@link #SPEED} pixels, clamped so it cannot
      * leave the left edge of the screen.
-     *
-     * TODO: decrease x by SPEED, then clamp x so it is never less than 0.
-     * Difficulty: Easy
      */
     public void moveLeft() {
-        // TODO: implement left movement with a left-edge boundary check
         if (x >= 0) {
-            if (x <= 7) {
+            if (x <= SPEED) {
                 x = 0;
                 return;
             }
@@ -61,15 +57,10 @@ public class Paddle {
     /**
      * Moves the paddle right by {@link #SPEED} pixels, clamped so it cannot
      * leave the right edge of the screen.
-     *
-     * TODO: increase x by SPEED, then clamp x so (x + WIDTH) never exceeds
-     *       screenWidth.
-     * Difficulty: Easy
      */
     public void moveRight() {
-        // TODO: implement right movement with a right-edge boundary check
         if (x <= screenWidth) {
-            if (x >= screenWidth - WIDTH - 7) {
+            if (x >= screenWidth - WIDTH - SPEED) {
                 x = screenWidth - WIDTH; // WIDTH is paddlewidth. It Seems like the 'x' is actually where the leftmost part of the paddle is.
                 return;
             }

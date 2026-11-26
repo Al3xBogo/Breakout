@@ -10,19 +10,25 @@ TEAM MEMBERS:
 
 --------------------------------------------
 ENHANCED FEATURES IMPLEMENTED:
-  1. [Feature ID & Name, e.g., E1 - Multiple Brick Types]
-     Brief description of how it works.
+  1. E7 - High Score Persistence
+     Creates a highScore.txt file in the project root directory if it does not yet exist.
+      The program tracks high score during the game, then once the game ends writes it to the file.
 
-  2. [Feature ID & Name, e.g., E2 - Increasing Difficulty]
-     Brief description of how it works.
+  2. E6 - Pause Functionality
+     Listens for "escape" keypress and toggles pausing.
+     Pauses timer and draws "pause" symbol overlay while paused.
+     Resumes timer while un-paused.
 
   3. [Feature ID & Name, e.g., E5 - Start Screen]
      Brief description of how it works.
 
 --------------------------------------------
 CONTRIBUTIONS:
-  [Name 1]: Implemented Paddle class, keyboard input,
-            moveLeft()/moveRight(), and the start screen.
+  Alex:     Created repository on GitHub for working on the game at https://github.com/Al3xBogo/Breakout
+            Implemented Paddle motion and collisions
+            Fixed ball interactions with bricks
+            Added play/pause interactions
+            Added persistent high score functionality
 
   [Name 2]: Implemented Ball class, wall and paddle
             collisions, and increasing difficulty.
@@ -45,5 +51,7 @@ COMPILATION & RUNNING:
 REFERENCES:
   - [List any tutorials, videos, or documentation you used]
   - [e.g., "Java Swing documentation: docs.oracle.com/..."]
+  - Java Read Files Tutorial: https://www.w3schools.com/java/java_files_read.asp
+  - Java Write Files Tutorial: https://www.w3schools.com/java/java_files_write.asp
 
 ============================================

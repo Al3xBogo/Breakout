@@ -231,18 +231,8 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
     /**
      * Bounces the ball off the left, right, and top walls.
-     *
-     * TODO:
-     *   - If the ball's x is at or past the left edge (x <= 0) OR at or past
-     *     the right edge (x + Ball.SIZE >= WIDTH), call ball.bounceX().
-     *   - If the ball's y is at or past the top edge (y <= 0),
-     *     call ball.bounceY().
-     *   (The BOTTOM wall is NOT handled here — falling past the bottom costs a
-     *    life, which you handle in checkLoseCondition().)
-     * Difficulty: Medium
      */
     private void checkWallCollisions() {
-        // TODO: reverse ball direction when it hits a side or the top wall
         if (ball.getX() <= 0 || ball.getX() >= WIDTH - ball.SIZE) { // Bounces from left and right edges of screen
             ball.bounceX();
         }
@@ -251,26 +241,15 @@ public class Game extends JPanel implements ActionListener, KeyListener {
             ball.bounceY();
         }
 
-        /*
-        if (ball.getX()<=0 || ball.getX()+ball.SIZE>=WIDTH) {
-            ball.bounceX();
-        }
-        if (ball.getY()<=0) {
-            ball.bounceY();
-        }
-        */
     }
 
     /**
      * Bounces the ball upward when it strikes the paddle.
      *
      * TODO:
-     *   - If ball.getBounds() intersects paddle.getBounds() AND the ball is
-     *     moving downward (ball.getDy() > 0), call ball.bounceY().
      *   - (Optional polish) Adjust ball.setDx(...) based on where it hit the
      *     paddle so the player can aim.
      * Hint: Rectangle has an intersects(Rectangle) method.
-     * Difficulty: Medium
      */
     private void checkPaddleCollision() {
         Rectangle ballBounds = ball.getBounds();
@@ -296,16 +275,6 @@ public class Game extends JPanel implements ActionListener, KeyListener {
     /**
      * Checks the ball against every brick in the 2D array. The first live brick
      * the ball overlaps is destroyed; the ball bounces and the score increases.
-     *
-     * TODO:
-     *   - Loop over every row r and column c of the bricks array.
-     *   - Skip bricks that are null or already destroyed.
-     *   - If ball.getBounds() intersects brick.getBounds():
-     *         * mark the brick destroyed  (brick.setDestroyed(true))
-     *         * add brick.getPoints() to score
-     *         * call ball.bounceY()
-     *         * return  (handle at most one brick per tick)
-     * Difficulty: Hard
      */
     private void checkBrickCollisions() {
         for (Brick[] bricks1 : bricks) {
@@ -315,35 +284,28 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
                 if (!brick.isDestroyed() && brickBounds.intersects(ballBounds)) {
                     brick.setDestroyed(true);
-
+                    // TODO: Improve ball physics. For now, disabled.
+                    /*
                     if(ball.getX() + ball.getBounds().width - ball.getDx() > brickBounds.x && ball.getX() + ball.getDx() < brickBounds.getMaxX()) {
                         ball.bounceY();
-                    } else /*if (ball.getY() + ball.getBounds().width > brickBounds.x + ball.getDy())*/ {
+                    } else // if (ball.getY() + ball.getBounds().width > brickBounds.x + ball.getDy())
+                    {
                         ball.bounceX();
                     }
-                    score++;
+
+                     */
+                    ball.bounceY();
+
+
+                    score += brick.getPoints();
                     if (highScore < score) {
                         highScore = score;
-                        // TODO: Display this ^ on the screen
                     }
                     return;
                 }
             }
 
         }
-        // TODO: destroy the first brick the ball hits, score it, and bounce
-        /*for (int i=0; i<bricks.length;i++) {
-            for (int j = 0; j < bricks[i].length; j++) {
-                if (bricks[i][j]!=null&&bricks[i][j].isDestroyed()==true) {
-                    if (ball.getBounds().intersects(bricks[i][j].getBounds())) {
-                        score++;
-                        ball.bounceY();
-                        bricks[i][j].setDestroyed(true);
-                    }
-
-                }
-            }
-        }*/
     }
 
     // ================================================================
@@ -352,54 +314,35 @@ public class Game extends JPanel implements ActionListener, KeyListener {
 
     /**
      * Ends the game as a WIN when every brick has been destroyed.
-     *
-     * TODO:
-     *   - Loop over the bricks array.
-     *   - If any brick is non-null and NOT destroyed, there are bricks left,
-     *     so return without ending the game.
-     *   - If the loop finishes with no live bricks, set won = true and
-     *     call endGame().
-     * Difficulty: Easy
      */
     private void checkWinCondition() {
-        // TODO: if no live bricks remain, win the game
-        boolean win=true;
-        for (int i =0;i<bricks.length;i++) {
-            for (int j=0;j<bricks[i].length;j++) {
-                if (bricks[i][j]!=null ) {
-                    if (bricks[i][j].isDestroyed() == false) {
-                        win = false;
-                    }
+        for (Brick[] bricks1 : bricks) {
+            for (Brick brick : bricks1) {
+                if (brick != null && !brick.isDestroyed()) {
+                    return;
                 }
             }
         }
-        if (win) {
-            endGame();
-        }
+
+        won = true;
+        endGame();
+
     }
 
     /**
      * Handles the ball falling below the bottom of the screen: the player loses
      * a life. When no lives remain, the game ends as a LOSS.
-     *
-     * TODO:
-     *   - If the ball's y has gone past the bottom (ball.getY() > HEIGHT):
-     *         * subtract 1 from lives
-     *         * if lives <= 0: set won = false and call endGame()
-     *         * otherwise: call resetBall() to send a new ball from the paddle
-     * Difficulty: Easy
      */
     private void checkLoseCondition() {
-        // TODO: lose a life when the ball falls off the bottom; end at 0 lives
         if (ball.getY()+ball.SIZE>=HEIGHT) {
             if (lives>0) {
+                lives--;
                 resetBall();
-                lives-=1;
             }
             else {
                 won=false;
                 endGame();
-                ball.setX(-999); // hides ball
+                ball.setX(WIDTH + Ball.SIZE); // hides ball
             }
         }
     }
@@ -528,14 +471,16 @@ public class Game extends JPanel implements ActionListener, KeyListener {
     }
 
     /**
-     * Unused, but required by the KeyListener interface.
+     * Listens for escape key for pausing the game
      *
      * @param e the key event
      */
     @Override
     public void keyTyped(KeyEvent e) {
         if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
-            pauseToggle();
+            if (!gameOver) {
+                pauseToggle();
+            }
         }
     }
 }

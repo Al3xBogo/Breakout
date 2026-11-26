@@ -40,12 +40,9 @@ public class Ball {
 
     /**
      * Advances the ball one step by adding its velocity to its position.
-     *
-     * TODO: add dx to x, and add dy to y.
-     * Difficulty: Easy
+     * TODO: (Optional enhancement) add a parameter for an angle from the paddle to bounce the ball off of, kind of like the Google version of ball breaker. Prevents the ball from getting stuck in a loop.
      */
     public void update() {
-        // TODO: move the ball by its velocity
         x+=dx;
         y+=dy;
     }
